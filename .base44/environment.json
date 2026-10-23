@@ -1,0 +1,12 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d --build",
+  "secrets": [
+    {
+      "name": "GEMINI_API_KEY",
+      "description": "Google Gemini API key used by the app's AI reading generation (Google AI Studio / Google Cloud console). The Android build compiles it into the app via the secrets-gradle-plugin, so the value must be present when the APK is built; without a real key the app falls back to the placeholder from .env.example and the AI report step cannot call Gemini.",
+      "requiredAtBoot": false
+    }
+  ]
+}

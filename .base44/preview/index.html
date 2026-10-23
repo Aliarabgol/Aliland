@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>آسترونیت — پیش‌نمایش اپلیکیشن</title>
+<style>
+  :root {
+    --midnight: #101426;
+    --surface: #191e36;
+    --card: #202747;
+    --indigo: #25234a;
+    --gold: #c7a76b;
+    --bright-gold: #e5c383;
+    --ivory: #f4efe6;
+    --lavender: #9b94b7;
+    --error: #b94a55;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 20px 64px;
+    background: radial-gradient(circle at 50% -10%, #25234a 0%, #101426 55%) no-repeat, var(--midnight);
+    color: var(--ivory);
+    font-family: "Segoe UI", Tahoma, system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+  header { max-width: 1180px; margin: 0 auto 24px; text-align: center; }
+  h1 {
+    margin: 0 0 6px;
+    font-size: clamp(24px, 4vw, 36px);
+    color: var(--bright-gold);
+    letter-spacing: 0.5px;
+  }
+  .sub { color: var(--lavender); font-size: 15px; margin: 0; }
+  .banner {
+    max-width: 1180px;
+    margin: 0 auto 24px;
+    background: var(--surface);
+    border: 1px solid rgba(199, 167, 107, 0.28);
+    border-radius: 16px;
+    padding: 16px 20px;
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--ivory);
+  }
+  .banner strong { color: var(--gold); }
+  .banner code {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-size: 12.5px;
+  }
+  .actions { max-width: 1180px; margin: 0 auto 28px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: center; }
+  a.apk, a.ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    border-radius: 999px;
+    padding: 11px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: transform .15s ease, opacity .15s ease;
+  }
+  a.apk { background: linear-gradient(120deg, #d4af37, #f3e5ab); color: #101426; }
+  a.ghost { border: 1px solid rgba(199, 167, 107, 0.4); color: var(--gold); }
+  a.apk:hover, a.ghost:hover { transform: translateY(-1px); }
+  a.apk[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+  #status { max-width: 1180px; margin: 0 auto 24px; text-align: center; color: var(--lavender); font-size: 14px; }
+  #status .spin {
+    display: inline-block; width: 14px; height: 14px; margin-inline-end: 8px;
+    border: 2px solid rgba(199, 167, 107, .35); border-top-color: var(--gold);
+    border-radius: 50%; animation: spin 1s linear infinite; vertical-align: -2px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #failure {
+    max-width: 1180px; margin: 0 auto 24px; display: none;
+    border: 1px solid rgba(185, 74, 85, .5); background: rgba(185, 74, 85, .12);
+    border-radius: 14px; padding: 14px 18px;
+  }
+  #failure h2 { margin: 0 0 8px; font-size: 15px; color: #e8a2aa; }
+  #failure pre {
+    direction: ltr; text-align: left; overflow: auto; max-height: 220px;
+    margin: 0; font-size: 12px; color: #d9d3c8; background: rgba(0,0,0,.25);
+    padding: 10px; border-radius: 8px; white-space: pre-wrap;
+  }
+  #gallery {
+    max-width: 1180px; margin: 0 auto;
+    display: grid; gap: 28px 24px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+  figure { margin: 0; }
+  .frame {
+    position: relative;
+    border-radius: 30px;
+    padding: 10px;
+    background: linear-gradient(160deg, #2a2f52, #14172b);
+    border: 1px solid rgba(199, 167, 107, 0.22);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+  }
+  .frame img { display: block; width: 100%; height: auto; border-radius: 22px; background: var(--midnight); }
+  figcaption { margin-top: 12px; text-align: center; font-size: 13.5px; color: var(--ivory); }
+  figcaption span { display: block; direction: ltr; font-size: 11.5px; color: var(--lavender); letter-spacing: .4px; margin-top: 2px; }
+  footer { max-width: 1180px; margin: 48px auto 0; text-align: center; color: var(--lavender); font-size: 12.5px; line-height: 1.9; }
+</style>
+</head>
+<body>
+<header>
+  <h1>آسترونیت — AstroNiyat</h1>
+  <p class="sub">پیش‌نمایش اپلیکیشن اندروید (Jetpack Compose)</p>
+</header>
+
+<div class="banner">
+  این اپلیکیشن یک برنامه‌ی <strong>نیتیو اندروید</strong> است و در مرورگر اجرا نمی‌شود؛ همین‌طور سندباکس، شبیه‌ساز اندروید (KVM) ندارد.
+  برای همین، صفحات برنامه از کد واقعی <code>app/src/main</code> به‌صورت هدلس رندر شده‌اند (Robolectric + Roborazzi روی پروفایل Pixel 8، API 36) و فایل
+  <strong>APK</strong> ساخته‌شده هم برای نصب روی گوشی در دسترس است. داده‌های نمایش‌داده‌شده نمونه هستند.
+  <br />
+  <em>This is a native Android app, so the browser preview shows its real Compose screens rendered headlessly (no emulator in the sandbox) plus the built APK.</em>
+</div>
+
+<div class="actions">
+  <a class="apk" id="apk-link" aria-disabled="true" href="apk/app-debug.apk" download>⬇ دانلود APK دیباگ</a>
+</div>
+
+<div id="status"><span class="spin"></span>در حال ساخت برنامه و رندر صفحات… (اولین اجرا چند دقیقه طول می‌کشد)</div>
+<div id="failure">
+  <h2>ساخت برنامه ناموفق بود — Build failed</h2>
+  <pre id="failure-log"></pre>
+</div>
+
+<div id="gallery"></div>
+
+<footer>
+  صفحات از کامپوزبل‌های واقعی برنامه رندر می‌شوند · برای رندر مجدد پس از تغییر کد:<br />
+  <code>docker compose -f docker-compose.base44.yml up --force-recreate screenshots</code>
+</footer>
+
+<script>
+  const titles = {
+    "01-landing":        ["صفحه‌ی فرود", "Landing"],
+    "02-auth":           ["ورود با شماره موبایل", "Auth"],
+    "03-dashboard":      ["داشبورد کیهانی", "Dashboard"],
+    "04-profiles":       ["پروفایل‌های تولد", "Birth profiles"],
+    "05-services":       ["انتخاب سرویس", "Service select"],
+    "06-intention":      ["فرم نیت", "Intention form"],
+    "07-progress":       ["پردازش گزارش", "Reading progress"],
+    "08-reading-detail": ["جزئیات گزارش", "Reading detail"],
+    "09-history":        ["تاریخچه‌ی گزارش‌ها", "History"],
+    "10-admin":          ["پنل مدیریت", "Admin panel"]
+  };
+  const pretty = (name) => name.replace(/^\d+-/, "").replace(/-/g, " ");
+
+  function render(manifest) {
+    const gallery = document.getElementById("gallery");
+    gallery.innerHTML = "";
+    (manifest.screens || []).forEach((s) => {
+      const [fa, en] = titles[s.name] || [pretty(s.name), pretty(s.name)];
+      const fig = document.createElement("figure");
+      const frame = document.createElement("div");
+      frame.className = "frame";
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.alt = en;
+      img.src = "screens/" + s.name + ".png?t=" + encodeURIComponent(manifest.generatedAt || "");
+      frame.appendChild(img);
+      const cap = document.createElement("figcaption");
+      cap.textContent = fa;
+      const sub = document.createElement("span");
+      sub.textContent = en;
+      cap.appendChild(sub);
+      fig.appendChild(frame);
+      fig.appendChild(cap);
+      gallery.appendChild(fig);
+    });
+    const link = document.getElementById("apk-link");
+    link.setAttribute("aria-disabled", manifest.apk ? "false" : "true");
+    document.getElementById("status").style.display = manifest.screens.length ? "none" : "";
+    const failure = document.getElementById("failure");
+    if (manifest.status === "failed") {
+      failure.style.display = "block";
+      document.getElementById("failure-log").textContent = (manifest.logTail || "").split("|").join("\n");
+      document.getElementById("status").textContent = "ساخت با خطا متوقف شد.";
+    } else {
+      failure.style.display = "none";
+    }
+  }
+
+  async function poll() {
+    try {
+      const res = await fetch("manifest.json?t=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) throw new Error("no manifest yet");
+      const manifest = await res.json();
+      render(manifest);
+      if ((manifest.screens || []).length) return;  // rendered: stop polling
+    } catch (e) { /* still building */ }
+    setTimeout(poll, 5000);
+  }
+  poll();
+</script>
+</body>
+</html>

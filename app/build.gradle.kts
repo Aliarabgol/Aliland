@@ -61,8 +61,18 @@ android {
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
 // to match the convention used in Web projects.
+//
+// The plugin only reads property files, never environment variables. In the Base44
+// sandbox the platform delivers app secrets to a file outside the repository
+// (/run/base44/app.env, overridable with BASE44_SECRETS_ENV_FILE), so use that file when it
+// defines GEMINI_API_KEY; otherwise behaviour is exactly as before (.env, then .env.example).
 secrets {
-  propertiesFileName = ".env"
+  val platformSecretsFile =
+    rootProject.file(System.getenv("BASE44_SECRETS_ENV_FILE") ?: "/run/base44/app.env")
+  val platformProvidesGeminiKey =
+    platformSecretsFile.isFile && platformSecretsFile.readText().contains("GEMINI_API_KEY")
+  propertiesFileName =
+    if (platformProvidesGeminiKey) platformSecretsFile.absolutePath else ".env"
   defaultPropertiesFileName = ".env.example"
 }
 
