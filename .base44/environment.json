@@ -1,0 +1,13 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "AUTH_SECRET",
+      "description": "کلید امضای نشست پنل کارکنان. برای توسعه به‌صورت خودکار تولید شده است؛ پیش از استفادهٔ واقعی با مقدار امن جایگزین شود.",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": true
+    }
+  ]
+}

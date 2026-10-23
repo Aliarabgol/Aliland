@@ -1,0 +1,84 @@
+name: base44-showroom
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: showroom
+      POSTGRES_PASSWORD: showroom
+      POSTGRES_DB: showroom
+    volumes:
+      - showroom_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U showroom -d showroom"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: on-failure
+    labels:
+      base44.kind: infra
+
+  api:
+    image: node:22-bookworm-slim
+    working_dir: /app/api
+    volumes:
+      - ./api:/app/api
+      - showroom_api_modules:/app/api/node_modules
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    environment:
+      - NODE_ENV=development
+      - PORT=8000
+      - DATABASE_URL=postgres://showroom:showroom@db:5432/showroom
+    command: ["sh", "-ec", "npm install --no-audit --no-fund && exec npm run dev"]
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: on-failure
+    labels:
+      base44.project: showroom-api
+      base44.kind: api
+      base44.port: "8000"
+
+  web:
+    image: node:22-bookworm-slim
+    working_dir: /app/web
+    volumes:
+      - ./web:/app/web
+      - showroom_web_modules:/app/web/node_modules
+    environment:
+      - NODE_ENV=development
+      - BASE44_PREVIEW_MODE
+      - API_URL=http://api:8000
+      - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+    command: ["sh", "-ec", "npm install --no-audit --no-fund && exec npm run dev"]
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "3000:5173"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:5173/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: on-failure
+    labels:
+      base44.project: showroom-web
+      base44.kind: web
+      base44.port: "3000"
+
+volumes:
+  showroom_db:
+  showroom_api_modules:
+  showroom_web_modules:
