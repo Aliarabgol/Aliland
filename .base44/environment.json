@@ -1,0 +1,17 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d --build",
+  "secrets": [
+    {
+      "name": "AUTH_SECRET",
+      "description": "Signs admin session cookies for the AliLand API. Required for administrator login to stay valid across restarts.",
+      "requiredAtBoot": true
+    },
+    {
+      "name": "ADMIN_PASSWORD",
+      "description": "Password for the seeded admin account (ADMIN_EMAIL, default admin@aliland.demo). Optional: when unset the demo seed uses the built-in portfolio password and the login screen labels itself as a demo account. Set it before any real use.",
+      "requiredAtBoot": false
+    }
+  ]
+}
