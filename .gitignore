@@ -16,3 +16,10 @@
 local.properties
 .env
 debug.keystore
+
+# sandbox dev defaults (committed placeholders — real secrets live in /run/base44/app.env)
+!.env.base44-defaults
+
+# uploaded admin media is runtime data
+api/uploads/*
+!api/uploads/.gitkeep

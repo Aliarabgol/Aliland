@@ -1,0 +1,117 @@
+# AliLand — sandbox/dev stack for the Base44 preview.
+#
+# Everything here runs FROM THE CLONED SOURCE (bind mounts + dev servers), so edits
+# show up in the preview without rebuilding images. Infrastructure (postgres) is a
+# plain pinned image.
+#
+#   web  -> Vite dev server, published on host port 3000 (the preview entry point)
+#   api  -> Express API on container port 4000 (reached through the Vite proxy,
+#           single-origin, so the session cookie stays same-origin)
+#   db   -> Postgres 16, schema + synthetic demo seed applied on first boot
+#
+# Secret precedence: placeholders in .env.base44-defaults come first, the
+# platform-managed /run/base44/app.env is LAST so the owner's dashboard values win.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: on-failure
+    environment:
+      POSTGRES_USER: aliland
+      POSTGRES_PASSWORD: aliland_dev_only
+      POSTGRES_DB: aliland
+    volumes:
+      - aliland_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aliland -d aliland"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+
+  api:
+    image: node:22
+    restart: on-failure
+    working_dir: /app/api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: "4000"
+      DATABASE_URL: postgresql://aliland:aliland_dev_only@db:5432/aliland
+      UPLOAD_DIR: /app/api/uploads
+      NODE_ENV: development
+      # Passed through so sandbox-only code paths can gate on an exact "1" match.
+      BASE44_PREVIEW_MODE:
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    volumes:
+      - ./api:/app/api
+      - aliland_api_node_modules:/app/api/node_modules
+    ports:
+      - "4000:4000"
+    command:
+      - sh
+      - -ec
+      - |
+        npm install --no-audit --no-fund
+        node db/migrate.js
+        exec node --watch-path=src --watch-path=db src/index.js
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - node -e "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    labels:
+      base44.project: AliLand API
+      base44.kind: api
+      base44.port: "4000"
+
+  web:
+    image: node:22
+    restart: on-failure
+    working_dir: /app/web
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      # Vite dev-server host allowlist: the platform sets this bare, Vite >= 6.1
+      # appends it to server.allowedHosts.
+      __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS:
+      BASE44_PREVIEW_MODE:
+      BASE44_SANDBOX_HOST_DOMAIN:
+      API_PROXY_TARGET: http://api:4000
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    volumes:
+      - ./web:/app/web
+      - aliland_web_node_modules:/app/web/node_modules
+    ports:
+      - "3000:5173"
+    command:
+      - sh
+      - -ec
+      - |
+        npm install --no-audit --no-fund
+        exec npx vite --host 0.0.0.0 --port 5173 --strictPort
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - node -e "fetch('http://127.0.0.1:5173/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    labels:
+      base44.project: AliLand Web
+      base44.kind: web
+      base44.port: "3000"
+
+volumes:
+  aliland_db:
+  aliland_api_node_modules:
+  aliland_web_node_modules:
